@@ -1,93 +1,107 @@
 #include <iostream>
 #include <fstream>
+#include <ctime>
 
 using namespace std;
+
+ofstream of;
 
 class SudokuGenerator {
 private:
 	int sudoku[9][9];
+	int list[9];
 	bool flag[2][9];
 	int InitialValue;	//can't be changed
 	int count;
 
 public:
-	SudokuGenerator() {
+	SudokuGenerator(int InitialValue) {
 		for (int i = 0; i < 9; ++i)
 			for (int j = 0; j < 9; ++j)
 				sudoku[i][j] = 0;
 
-		this->InitialValue = 1;
-		this->count = 0;
-	}
+		for (int i = 0; i < 9; ++i)
+			list[i] = i + 1;
+		
+		srand((int)time(NULL));
+		for (int i = 0; i< 9; ++i){
+			int tmp = rand() % 9;
+			int t = list[i];
+			list[i] = list[tmp];
+			list[tmp] = t;
+		}
 
-	void clear() {
-		for (int i = 0; i < 2; ++i)
-			for (int j = 0; j < 9; ++j)
-				flag[i][j] = false;
+		this->InitialValue = InitialValue;
+		this->count = 0;
+
+		sudoku[0][0] = InitialValue;
 	}
 
 	void run() {
-		iterator(1, 0);
+		iterator(0, 1);
 	}
 
-	bool iterator(int num, int i) {
-		if (i == 9 && num == 9) {
-			//print();
+	void iterator(int row, int col) {
+		if (row == 8 && col == 9) {
 			count++;
-			if (count == 100000)
+			print();
+			if (count == 100)
 				exit(0);
-			return true;
-		}
-		if (i == 9 && num < 9)
-			return iterator(num + 1, 0);
-
-		if (i == 0) {
-			clear();
-			if (num == InitialValue) {
-				sudoku[0][0] = InitialValue;
-				flag[0][0] = true;
-				flag[1][0] = true;
-				iterator(num, i + 1);
-			}
+			return;
 		}
 
-		int j;
-		for (j = 0; j < 9; ++j) {
-			int x = i / 3 * 3 + j / 3;
-			int y = (i % 3) * 3 + j % 3;
-			if (flag[0][x] == false && flag[1][y] == false && sudoku[x][y] == 0) {
-				flag[0][x] = true;
-				flag[1][y] = true;
-				sudoku[x][y] = num;
-				
-				if (iterator(num, i + 1) == true) {
-					flag[0][x] = false;
-					flag[1][y] = false;
-					sudoku[x][y] = 0;
+		if (col == 9) {
+			row++;
+			col = 0;
+		}
+
+		if (sudoku[row][col] == 0) {
+			for (int i = 0; i < 9; ++i)
+				if (exist(row, col, list[i])) {
+					sudoku[row][col] = list[i];
+					//print();
+					iterator(row, col + 1);
+					sudoku[row][col] = 0;
 				}
-			}
 		}
-		if (j == 9)
-			return true;
+
+	}
+
+	bool exist(int row, int col, int num) {
+		int x = row / 3 * 3,
+			y = col / 3 * 3;
+
+		for (int i = x; i < x + 3; ++i)
+			for (int j = y; j < y + 3; ++j)
+				if (sudoku[i][j] == num)
+					return false;
+
+
+		for (int i = 0; i < 9; ++i)
+			if (sudoku[row][i] == num || sudoku[i][col] == num)
+				return false;
+
+		return true;
 	}
 
 
 	void print() {
-		//ofstream of;
-		//of.open("sudoku.txt", ios::app);
+		of << this->count << endl;
 		for (int i = 0; i < 9; ++i) {
 			for (int j = 0; j < 9; ++j) {
-				cout << sudoku[i][j];
-				if (j < 8) cout << " ";
-				else cout << endl;
+				of << sudoku[i][j];
+				if (j < 8) of << " ";
+				else of << endl;
 			}
 		}
-		cout << endl;
+		of << endl;
 	}
 
 };
 
-//int main() {
-//	SudokuGenerator sudoku;
-//	sudoku.run();
-//}
+int main() {
+	SudokuGenerator sudoku(1);
+	of.open("sudoku.txt");
+	sudoku.run();
+	of.close();
+}

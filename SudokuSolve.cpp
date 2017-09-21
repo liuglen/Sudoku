@@ -7,6 +7,7 @@ class SudokuSolve {
 private:
 	int sudoku[9][9];
 	bool flag[2][9];
+	bool flag2[9];
 public:
 	SudokuSolve() {
 		for (int i = 0; i < 9; ++i)
@@ -14,56 +15,50 @@ public:
 				cin >> sudoku[i][j];
 	}
 
-	void clear() {
-		for (int i = 0; i < 2; ++i)
-			for (int j = 0; j < 9; ++j)
-				flag[i][j] = false;
-	}
-
 	void run() {
-		iterator(1, 0);
+		iterator(0, 0);
 	}
 
-	int iterator(int num, int i) {
-		if (i == 9 && num == 9) {
+	void iterator(int row, int col) {
+		if (row == 8 && col == 9) {
 			print();
-			return 2;
-		}
-		if (i == 9 && num < 9)
-			return iterator(num + 1, 0);
-
-		if (i == 0) {
-			clear();
-			for (int p = 0; p < 9; ++p)
-				for (int q = 0; q < 9; ++q)
-					if (sudoku[p][q] == num) {
-						flag[0][p] = true;
-						flag[1][q] = true;
-					}
+			return;
 		}
 
-		int j;
-		for (j = 0; j < 9; ++j) {
-			int x = i / 3 * 3 + j / 3;
-			int y = (i % 3) * 3 + j % 3;
-			if (sudoku[x][y] == num && iterator(num, i + 1) == 1)
-				return 1;
-			if (flag[0][x] == false && flag[1][y] == false && sudoku[x][y] == 0) {
-				flag[0][x] = true;
-				flag[1][y] = true;
-				sudoku[x][y] = num;
-				print();
-				if (iterator(num, i + 1) == 1) {
-					flag[0][x] = false;
-					flag[1][y] = false;
-					sudoku[x][y] = 0;
+		if (col == 9) {
+			row++;
+			col = 0;
+		}
+
+		if (sudoku[row][col] == 0) {
+			for (int num = 1; num <= 9; ++num)
+				if (exist(row, col, num)) {
+					sudoku[row][col] = num;
+					//print();
+					iterator(row, col + 1);
+					sudoku[row][col] = 0;
 				}
-			}
 		}
-		if (j == 9)
-			return 1;
+		else
+			iterator(row, col + 1);
 	}
 
+	bool exist(int row, int col, int num) {
+		int x = row / 3 * 3,
+			y = col / 3 * 3;
+
+		for (int i = x; i < x + 3; ++i)
+			for (int j = y; j < y + 3; ++j)
+				if (sudoku[i][j] == num)
+					return false;
+
+
+		for (int i = 0; i < 9; ++i)
+			if (sudoku[row][i] == num || sudoku[i][col] == num)
+				return false;
+
+		return true;
+	}
 
 	void print() {
 		ofstream of;
@@ -79,7 +74,7 @@ public:
 	}
 };
 
-int main() {
-	SudokuSolve sudokusolve;
-	sudokusolve.run();
-}
+//int main() {
+//	SudokuSolve sudokusolve;
+//	sudokusolve.run();
+//}
